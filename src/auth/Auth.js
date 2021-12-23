@@ -1,16 +1,31 @@
 const jwt = require('jsonwebtoken');
 
-module.exports.verifyToken = (req, res, next) => {
-    // const bearerHeader = req.headers['authorization'];
-    // if (typeof bearerHeader !== 'undefined') {
-    //     const bearer = bearerHeader.split(' ');
-    //     const bearerToken = bearer[1];
-    //     req.token = bearerToken;
-    //     next();
-    // } else {
-    //     res.sendStatus(403);
-    // }
+const Customer = require('../models/Customer');
 
-    const token = req.headers.authorization;
-    console.log(token);
+module.exports.verifyToken = (req, res, next) => {
+    try{
+        const token = req.headers.authorization.split(" ")[1];
+    jwt.verify(token, "mysecretkey", (err, authData) => {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            console.log(authData.customerId);
+            Customer.findOne({_id:authData.customerId}, (err, customer) => {
+                if (err) {
+                    res.sendStatus(403);
+                } else {
+                    req.customer = customer;
+                    console.log(customer);
+                    next();
+                }
+            })
+           
+        }
+    });
+    }catch(err){
+        res.sendJson(403, {
+            message: "Invalid token",
+            error: err,
+        })
+    }
 }

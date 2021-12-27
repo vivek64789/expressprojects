@@ -18,5 +18,3 @@ app.listen(3000, () => {
     console.log('server listening ata port 3000');
 });
 
-
-

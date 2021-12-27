@@ -8,7 +8,7 @@ const router = new express.Router();
 const Customer = require("../models/Customer");
 const Auth = require("../auth/Auth");
 const upload = require("../profile/Profile");
-const Customer = require("../models/Customer");
+
 router.post("/customer/register", function (req, res) {
     const username = req.body.username;
     const password = req.body.password;
@@ -17,6 +17,7 @@ router.post("/customer/register", function (req, res) {
     const country = req.body.country;
     const firstname = req.body.firstname;
     const lastname = req.body.lastname;
+    const profile_image = req.body.profile_image;
 
     Customer.findOne({ username: username }).then(function (customerData) {
         if (customerData != null) {
@@ -33,18 +34,16 @@ router.post("/customer/register", function (req, res) {
                 country: country,
                 firstname: firstname,
                 lastname: lastname,
+                profile_image: profile_image
             })
             customerData.save().then(customer => {
                 res.json({
                     sucess: true,
                     "message": "user registered!"
-                }).catch(function (e) {
-                    res.json(e)
                 })
+            }).catch(function (e) {
+                res.json(e)
             });
-
-
-    
         })
     })
 
@@ -72,9 +71,9 @@ router.post("/customer/login", function (req, res) {
 })
 
 //  FOR Uploading images use this route,
-router.post('/customer/profile/upload', upload.single('user_image'), (req, res) => {
+router.post('/customer/profile/upload', upload.single('user_image'), Auth.verifyToken, (req, res) => {
     const file = req.file;
-    if(file === undefined){
+    if (file === undefined) {
         return res.json({
             message: "No file selected or Invalid file format!"
         });
@@ -88,17 +87,28 @@ router.post('/customer/profile/upload', upload.single('user_image'), (req, res) 
     // });
 
     // insert file name and path to database
-  
+
     const fileName = req.file.filename;
     const filePath = req.file.path;
     // update customer profile image
+    console.log(req.customer._id);
+    Customer.findOneAndUpdate({ _id: req.customer._id }, { $set: { profile_image: filePath } })
 });
+
+//  view profile image
+router.get('/customer/profile/view', Auth.verifyToken, (req, res) => {
+    var customer = req.customer;
+    res.json({
+        "username": customer.username,
+        "profile_image": customer.profile_image
+    })
+})
 
 module.exports = router;
 
 // Auth.verifyToken, is a middleware function that will be executed before the route handler, also called as guard
-router.delete("/customer/delete",Auth.verifyToken, function(req,res){
-    res.json({msg: " delete"});
+router.delete("/customer/delete", Auth.verifyToken, function (req, res) {
+    res.json({ msg: " delete" });
 })
 
 module.exports = router;

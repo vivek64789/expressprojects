@@ -26,6 +26,9 @@ const Customer = mongoose.model("customer", {
     phonenumber: {
         type: String,
     },
+    profile_image:{
+        type: String,
+    }
 
 });
 
